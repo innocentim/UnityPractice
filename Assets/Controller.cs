@@ -7,11 +7,22 @@ public class Controller : MonoBehaviour {
 		RIGHT,
 	};
 
+	public float speedFactor;
 	private Orientation orientation;
+	private float moveSpeed {
+		get {
+			return Input.GetAxis ("Horizontal");
+		}
+	}
 
 	// Use this for initialization
 	void Start () {
 		orientation = Orientation.RIGHT;
+		foreach (AnimationState state in animation) {
+			state.wrapMode = WrapMode.Loop;
+			state.weight = 0;
+			state.enabled = true;
+		}
 	}
 
 	void HandleInput() {
@@ -26,16 +37,23 @@ public class Controller : MonoBehaviour {
 	void Update () {
 		HandleInput ();
 		UpdateTransientRotate ();
+		UpdateTranslation ();
 		UpdateAnimation ();
 	}
 
 	void UpdateTransientRotate() {
 		transform.rotation = Quaternion.Slerp (
 			transform.rotation,
-			orientation == Orientation.RIGHT ? Quaternion.Euler(Vector3.up * 90f) : Quaternion.Euler(Vector3.up * 270f),
+			Quaternion.Euler(Vector3.up * (orientation == Orientation.RIGHT ? 90f : 270f)),
 			Time.deltaTime * 10);
 	}
 
+	void UpdateTranslation() {
+		transform.Translate (Vector3.right * Time.deltaTime * moveSpeed * speedFactor, Space.World);
+	}
+
 	void UpdateAnimation() {
+		animation["idle"].weight = 1 - Mathf.Abs (moveSpeed);
+		animation["run"].weight = Mathf.Abs (moveSpeed);
 	}
 }
